@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Read-Back Policy Quiz</title>
+<style>
+:root{--bg:#eef3f4;--card:#fff;--ink:#12292e;--muted:#5b7479;--line:#cddadd;--accent:#0f6b73;--ai:#fff;--ok:#1b7a3d;--bad:#b3261e;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1b1e;--card:#15272b;--ink:#e6f1f2;--muted:#8fa9ad;--line:#2a4247;--accent:#4fc3cc;--ai:#06282c;--ok:#5fd488;--bad:#ff8a80}}
+:root[data-theme="dark"]{--bg:#0e1b1e;--card:#15272b;--ink:#e6f1f2;--muted:#8fa9ad;--line:#2a4247;--accent:#4fc3cc;--ai:#06282c;--ok:#5fd488;--bad:#ff8a80}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,Arial,sans-serif;padding:20px 16px;display:flex;justify-content:center}
+main{width:100%;max-width:920px}
+h1{font-size:1.35rem;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px}
+label{display:block;font-weight:600;margin:0 0 6px}
+select{width:100%;font:inherit;padding:11px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);margin-bottom:14px}
+button{font:inherit;font-weight:600;padding:12px 18px;border:0;border-radius:8px;background:var(--accent);color:var(--ai);cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.alt{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.q{margin:0}#qs{margin-bottom:14px}#sheet .grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}@media (max-width:640px){#qs,#sheet .grid{grid-template-columns:1fr}}
+.q p{font-weight:600;margin:0 0 8px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer}
+.opt input{margin-top:4px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.hide{display:none}
+#sheet{display:none;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px}#sheet.on{display:block}
+.score{font-size:1.5rem;font-weight:700}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+@media print{
+ @page{size:A4;margin:12mm}
+ body{background:#fff;color:#000;padding:0;display:block}
+ .screen{display:none!important}
+ #sheet{display:block!important;font-size:10.5pt;line-height:1.35;color:#000;background:#fff;border:0;border-radius:0;padding:0;margin:0}
+ #sheet .ok{color:#116b30}#sheet .bad{color:#b3261e}#sheet{font-size:9.5pt!important}#sheet .grid{grid-template-columns:1fr 1fr!important}
+}
+#sheet h2{margin:0 0 4px;font-size:15pt}
+#sheet .meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 16px;border-bottom:2px solid currentColor;padding-bottom:6px;margin-bottom:8px}
+#sheet .item{padding:5px 0;border-bottom:1px solid #ccc;break-inside:avoid}
+</style>
+</head>
+<body>
+<main>
+<h1>Read-Back Policy Quiz</h1>
+
+<section class="card screen" id="start">
+ <label for="ward">Ward</label>
+ <select id="ward"><option value="">Select ward</option><option>PHDU</option></select>
+ <label for="sid">ID number</label>
+ <select id="sid" disabled><option value="">Select ID number</option></select>
+ <p id="nm" style="margin:0 0 14px;color:var(--muted)">Staff Name will show here.</p>
+ <button id="go" disabled>Start quiz</button>
+</section>
+
+<section class="screen hide" id="quiz">
+ <div id="qs"></div>
+ <button class="alt" id="back">Back</button> <button id="next" disabled>Next</button><button id="submit" class="hide" disabled>Submit</button>
+ <span id="left" style="margin-left:10px;color:var(--muted)"></span>
+</section>
+
+<section class="card screen hide" id="result">
+ <div class="score" id="scoreTxt"></div>
+ <p id="scoreSub" style="color:var(--muted)"></p>
+ <p id="saveStat" style="font-weight:600"></p>
+ <div class="row">
+  <button id="print">Print A4 sheet / Save as PDF</button>
+ </div>
+ <p style="color:var(--muted);font-size:.9rem">In the print window, choose “Save as PDF” as the printer and paper size A4.</p>
+</section>
+
+<div id="sheet"></div>
+</main>
+<script>
+var STAFF=[["WARD NURSE","MARIYAM"],["26964","KOCHURANI THOMAS"],["46781","RINSY SHAJU"],["59079","ROMALYN SOLIVEN CAOILE"],["59328","NOBIN ELSAMMA JOSEPH"],["61817","MARIAN TARIAGA BAYARAS"],["62113","DIONEVIE EBRON MONGCAL"],["67036","IBTIHAJ SAID AYIL AL HASNI"],["67565","LIGI SARA ZACHARIA"],["73274","IBTISAM YAQOOB MOHSIN AL Q…"],["73290","SAMAH HAMED SULAIMAN AL Y…"],["76288","AIDA MAHMOOD MOOSA AL BAL…"],["77604","ASMA MARHOUN THUNAI AL MA…"],["77967","FATEMA ALI JUMA AL QARTUBI"],["77998","FATMA NASSER ALI AL MAHRIZ"],["78124","SHINO PAUL"],["78726","TINTU JOSE KUTTIYIL"],["82487","JUBY STANLY"],["82506","DHANYA JOSEPH"],["82509","MARIAMMA THOMAS"],["82522","LINCY MOL JOY KUTTY"],["82532","SALINI PUTHIYAKUNNEL SALIMI…"],["82534","MIDHUL MICHAEL VINU"],["82549","ANUMOL UNNI"],["84226","GLADIS BEULA PALMAR"],["84353","LITTY JOSEPH"],["84457","RENJITH JANET MERCYBAI"],["84461","NISMI KURIAN"],["84714","BEEYAMOL KURIAKOSE"],["84871","LINCY BABU"],["84908","JOSMY THAZHAKKEL CHACKO"],["84982","SAUMINI VALSALA"],["86933","OMNIA SALIM AMER AL MASRO…"],["86946","ARUB KHALFAN SAID AL RASHD…"],["88082","JILSY THOMAS"],["90618","REKHA KANJIRA VILAYIL"],["90749","FEMY JOSEPH"],["91682","SUAAD MAKTOUM OBAID AL JAE…"],["92466","CHINCHU RANI VINU"],["94210","MANJU MOHAN"]];
+var Q=[
+["What is the main purpose of the Read-Back Policy?",["To reduce nursing documentation","To prevent communication errors and promote patient safety","To save staff time","To avoid contacting the doctor"],1],
+["What should a nurse do after receiving a telephone medication order?",["Administer it immediately without confirmation","Ask another nurse to guess the details","Document and read the complete order back to the prescriber","Wait until the next shift"],2],
+["Who should confirm the read-back of a verbal or telephone order?",["The patient’s relative","The authorized prescriber who gave the order","Any available staff member","The hospital receptionist"],1],
+["Which details should be read back for a medication order?",["Medication name only","Dose only","Medication name, dose, route, frequency, and relevant instructions","Patient’s room number only"],2],
+["What should the nurse do if an order is unclear?",["Assume the intended instruction","Ask for clarification before proceeding","Ask the patient to decide","Ignore the unclear part"],1],
+["When should read-back be performed?",["Whenever required by the hospital’s approved policy for verbal or telephone communication","Only at the end of the shift","Only when the patient requests it","Only during night duty"],0],
+["What should the nurse do if the prescriber corrects the order during read-back?",["Keep the original order","Document and repeat the corrected order for confirmation","Ignore the correction","Ask another patient"],1],
+["What should be done after the order is confirmed?",["Discard all documentation","Document the order, confirmation, and required authentication according to policy","Record only the prescriber’s first name","Wait until the next day to document"],1],
+["What should the nurse do if the read-back reveals a discrepancy?",["Proceed with the first version","Clarify and resolve the discrepancy before proceeding","Choose the easiest option","Ask a colleague to select the dose"],1],
+["Which action demonstrates safe read-back practice?",["Repeating the order clearly and obtaining confirmation","Repeating only part of the order","Relying on memory without documentation","Accepting an unclear instruction"],0]];
+var SHEET_URL="https://script.google.com/macros/s/AKfycbzDMuK5rCmMf8Xaf9TLqryfn6Rqm1TT9dGnoY_1KQF0CO_aHBaFuej5i-c5s1p05PB0Tw/exec";
+function send(sc){if(SHEET_URL.indexOf("http")!==0)return;
+ var r={time:new Date().toLocaleString("en-GB"),ward:$("ward").value,id:who[0],name:who[1],score:sc,total:Q.length,percent:Math.round(sc/Q.length*100)};
+ Q.forEach(function(q,i){r["Q"+(i+1)]=L[ans[i]]+(ans[i]===q[2]?" \u2714":" \u2718 (correct "+L[q[2]]+")")});
+ var st=$("saveStat");st.textContent="Saving to Google Sheet...";st.style.color="var(--muted)";
+ var okMsg=function(){st.textContent="Saved to Google Sheet.";st.style.color="var(--ok)"};
+ var bad=function(m){st.textContent=m;st.style.color="var(--bad)"};
+ fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(r)}).then(function(){
+  var tries=0;(function chk(){tries++;
+   fetch(SHEET_URL+"?action=ids&t="+Date.now()).then(function(x){return x.json()}).then(function(a){
+    if(a.map(String).indexOf(String(r.id))>-1)okMsg();
+    else if(tries<4)setTimeout(chk,2000);
+    else bad("Not saved: the sheet has no row for ID "+r.id+". Open the web app URL in a browser and check it shows a list of IDs; deploy the script as a New version with access set to Anyone.");
+   }).catch(function(){if(tries<4)setTimeout(chk,2000);else bad("Could not confirm the save. The request was sent, but the web app URL did not answer. Check the deployment (Execute as Me, access Anyone, New version).")});
+  })();
+ }).catch(function(e){bad("Not sent ("+e.message+"). Open this page from your own site or computer, not the claude.ai link.")})}
+function loadDone(){try{return JSON.parse(localStorage.getItem("rbDone")||"[]")}catch(e){return[]}}
+function saveDone(id){if(done.indexOf(id)<0)done.push(id);try{localStorage.setItem("rbDone",JSON.stringify(done))}catch(e){}}
+var done=loadDone();
+var cur=0,L="ABCD",$=function(i){return document.getElementById(i)},ans=[],who=null;
+function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
+function show(id){["start","quiz","result"].forEach(function(x){$(x).classList.toggle("hide",x!==id)})}
+$("ward").onchange=function(){var s=$("sid");s.innerHTML='<option value="">Select ID number</option>';
+ STAFF.forEach(function(p,i){if(done.indexOf(p[0])>-1)return;var o=document.createElement("option");o.value=i;o.textContent=p[0];s.appendChild(o)});
+ s.disabled=!$("ward").value;if(!$("ward").value)s.innerHTML='<option value="">Select ID number</option>';$("sid").onchange()};
+$("sid").onchange=function(){var v=$("sid").value;who=v===""?null:STAFF[+v];
+ $("nm").textContent=who?"Staff Name: "+who[1]:"Staff Name will show here.";$("go").disabled=!who};
+$("go").onclick=function(){ans=[];cur=0;var h="";
+ Q.forEach(function(q,i){h+='<div class="card q"><p>'+(i+1)+'. '+esc(q[0])+'</p>';
+  q[1].forEach(function(o,j){h+='<label class="opt"><input type="radio" name="q'+i+'" value="'+j+'"><span>'+L[j]+'. '+esc(o)+'</span></label>'});
+  h+='</div>'});
+ $("qs").innerHTML=h;upd();show("quiz");window.scrollTo(0,0)};
+$("qs").onchange=function(e){var m=/^q(\d+)$/.exec(e.target.name);if(m){ans[+m[1]]=+e.target.value;upd()}};
+function upd(){var last=cur===Q.length-1;
+ document.querySelectorAll("#qs .q").forEach(function(e,i){e.classList.toggle("hide",i!==cur)});
+ $("back").disabled=cur===0;$("next").classList.toggle("hide",last);$("submit").classList.toggle("hide",!last);
+ $("next").disabled=ans[cur]===undefined;$("submit").disabled=ans.filter(function(a){return a!==undefined}).length<Q.length;
+ $("left").textContent="Question "+(cur+1)+" of "+Q.length}
+$("submit").onclick=function(){var sc=0,h='<h2>Read-Back Policy Quiz – Answer Sheet</h2><div class="meta"><span><b>Ward:</b> '+esc($("ward").value)+'</span><span><b>ID:</b> '+esc(who[0])+'</span><span><b>Staff Name:</b> '+esc(who[1])+'</span><span><b>Date:</b> '+new Date().toLocaleDateString("en-GB")+'</span></div>';
+ var body="";
+ Q.forEach(function(q,i){var ok=ans[i]===q[2];if(ok)sc++;
+  body+='<div class="item"><b>'+(i+1)+'. '+esc(q[0])+'</b><br>Your answer: '+L[ans[i]]+'. '+esc(q[1][ans[i]])+' <b class="'+(ok?"ok":"bad")+'">'+(ok?"✔ Correct":"✘ Wrong")+'</b>'+(ok?'':'<br><span class="ok"><b>Correct answer: '+L[q[2]]+'. '+esc(q[1][q[2]])+'</b></span>')+'</div>'});
+ h+='<p style="font-size:13pt;margin:6px 0"><b>Score: '+sc+' / '+Q.length+' ('+Math.round(sc/Q.length*100)+'%)</b></p><div class="grid">'+body+'</div>';
+ send(sc);saveDone(who[0]);$("sheet").innerHTML=h;
+ $("scoreTxt").textContent="Score: "+sc+" / "+Q.length;
+ $("scoreSub").textContent=who[1]+" ("+who[0]+") – "+Math.round(sc/Q.length*100)+"%. "+(Q.length-sc)+" wrong answer(s) are marked with the correct answer on the sheet.";
+ $("sheet").classList.add("on");show("result");window.scrollTo(0,0)};
+if(SHEET_URL.indexOf("http")===0)fetch(SHEET_URL+"?action=ids").then(function(r){return r.json()}).then(function(a){a.forEach(function(x){x=String(x);if(done.indexOf(x)<0)done.push(x)});if($("ward").value)$("ward").onchange()}).catch(function(){});
+$("print").onclick=function(){window.print()};
+$("next").onclick=function(){if(cur<Q.length-1){cur++;upd();window.scrollTo(0,0)}};
+$("back").onclick=function(){if(cur>0){cur--;upd();window.scrollTo(0,0)}};
+</script>
+</body>
+</html>
